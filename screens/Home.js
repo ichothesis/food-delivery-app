@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import {COLORS, images, SIZES, icons, FONTS} from '../constants';
 
-export default function Home() {
+export default function Home({navigation}) {
   // Dummy Datas
 
   const initialCurrentLocation = {
@@ -334,6 +334,11 @@ export default function Home() {
 
   function onSelectCategory(category) {
     //filter restaurant
+    if (category === selectedCategory) {
+      setSelectedCategory(null);
+      setRestaurants(restaurantData);
+      return;
+    }
     let restaurantList = restaurantData.filter(a =>
       a.categories.includes(category.id),
     );
@@ -465,7 +470,11 @@ export default function Home() {
   const renderRestaurantList = () => {
     const renderItem = ({item}) => {
       return (
-        <TouchableOpacity style={{marginBottom: SIZES.padding * 2}}>
+        <TouchableOpacity
+          style={{marginBottom: SIZES.padding * 2}}
+          onPress={() =>
+            navigation.navigate('Restaurant', {item, currentLocation})
+          }>
           <View style={{marginBottom: SIZES.padding}}>
             <Image
               source={item.photo}
