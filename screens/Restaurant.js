@@ -12,6 +12,7 @@ import {
 import {icons, COLORS, SIZES, FONTS} from '../constants';
 
 export default function Restaurant({route, navigation}) {
+  const scrollX = new Animated.Value(0);
   const [restaurant, setRestaurant] = React.useState(null);
   const [currentLocation, setCurrentLocation] = React.useState(null);
 
@@ -24,7 +25,7 @@ export default function Restaurant({route, navigation}) {
 
   const renderHeader = () => {
     return (
-      <View style={{flexDirection: 'row', marginTop: 15}}>
+      <View style={{flexDirection: 'row', marginTop: 15, marginBottom: 15}}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={{
@@ -82,9 +83,11 @@ export default function Restaurant({route, navigation}) {
         scrollEventThrottle={16}
         snapToAlignment={'center'}
         showsHorizontalScrollIndicator={false}
-        //onScroll={}
-      >
-        {restaurant.menu.map((item, index) => (
+        onScroll={Animated.event(
+          [{nativeEvent: {contentOffset: {x: scrollX}}}],
+          {useNativeDriver: false},
+        )}>
+        {restaurant?.menu.map((item, index) => (
           <View key={index} style={{alignItems: 'center'}}>
             <View style={{height: SIZES.height * 0.35}}>
               <Image
@@ -133,6 +136,37 @@ export default function Restaurant({route, navigation}) {
                   <Text style={{...FONTS.body1}}>+</Text>
                 </TouchableOpacity>
               </View>
+              <View
+                style={{
+                  width: SIZES.width,
+                  alignItems: 'center',
+                  marginTop: 15,
+                  paddingHorizontal: SIZES.padding * 2,
+                }}>
+                <Text
+                  style={{
+                    marginVertical: 10,
+                    textAlign: 'center',
+                    ...FONTS.h2,
+                  }}>
+                  {item.name} - {item.price.toFixed(2)}
+                </Text>
+                <Text style={{...FONTS.body3}}>{item.description}</Text>
+              </View>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  marginTop: 10,
+                  justifyContent: 'center',
+                }}>
+                <Image
+                  source={icons.fire}
+                  style={{width: 20, height: 20, marginRight: 10}}
+                />
+                <Text style={{...FONTS.body3, color: '#111'}}>
+                  {item.calories.toFixed(2)} cal
+                </Text>
+              </View>
             </View>
           </View>
         ))}
@@ -140,10 +174,73 @@ export default function Restaurant({route, navigation}) {
     );
   };
 
+  const renderDots = () => {
+    const dotPosition = Animated.divide(scrollX, SIZES.width);
+
+    return (
+      <View style={{height: 30}}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: SIZES.padding,
+          }}>
+          {restaurant?.menu.map((item, index) => {
+            const opacity = dotPosition.interpolate({
+              inputRange: [index - 1, index, index + 1],
+              outputRange: [0.3, 1, 0.3],
+              extrapolate: 'clamp',
+            });
+
+            const dotSize = dotPosition.interpolate({
+              inputRange: [index - 1, index, index + 1],
+              outputRange: [SIZES.base * 0.8, 10, SIZES.base * 0.8],
+            });
+
+            const dotColor = dotPosition.interpolate({
+              inputRange: [index - 1, index, index + 1],
+              outputRange: [COLORS.darkgray, COLORS.primary, COLORS.darkgray],
+              extrapolate: 'clamp',
+            });
+            return (
+              <Animated.View
+                key={index}
+                opacity={opacity}
+                style={{
+                  borderRadius: SIZES.radius,
+                  marginHorizontal: 6,
+                  width: dotSize,
+                  height: dotSize,
+                  backgroundColor: dotColor,
+                }}
+              />
+            );
+          })}
+        </View>
+      </View>
+    );
+  };
+
+  const renderOrder = () => {
+    return (
+      <View>
+        {renderDots()}
+        <View
+          style={{
+            backgroundColor: COLORS.white,
+            borderTopLeftRadius: 40,
+            borderTopRightRadius: 40,
+          }}></View>
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {renderHeader()}
       {renderFoodInfo()}
+      {renderOrder()}
     </SafeAreaView>
   );
 }
